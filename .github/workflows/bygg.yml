@@ -1,0 +1,465 @@
+# Blockpaus – bygger appen och lägger ut en färdig apk under Releases.
+# Allt i appen finns i den här filen. Ändra inget, spara bara.
+name: Bygg Blockpaus
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bygg:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Skapa appens filer
+        run: |
+          mkdir -p "$(dirname "app/build.gradle")"
+          cat > 'app/build.gradle' <<'BLOCKPAUS_EOF'
+          plugins {
+              id 'com.android.application'
+          }
+
+          android {
+              namespace 'se.sommarkatt.blockpaus'
+              compileSdk 34
+
+              defaultConfig {
+                  applicationId 'se.sommarkatt.blockpaus'
+                  minSdk 26
+                  targetSdk 34
+                  versionCode 1
+                  versionName '1.0'
+              }
+
+              signingConfigs {
+                  release {
+                      storeFile file('../keystore/blockpaus.jks')
+                      storePassword 'blockpaus123'
+                      keyAlias 'blockpaus'
+                      keyPassword 'blockpaus123'
+                  }
+              }
+
+              buildTypes {
+                  release {
+                      minifyEnabled false
+                      signingConfig signingConfigs.release
+                  }
+              }
+
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_17
+                  targetCompatibility JavaVersion.VERSION_17
+              }
+          }
+
+          tasks.withType(JavaCompile).configureEach {
+              options.encoding = 'UTF-8'
+          }
+          BLOCKPAUS_EOF
+
+          mkdir -p "$(dirname "app/src/main/AndroidManifest.xml")"
+          cat > 'app/src/main/AndroidManifest.xml' <<'BLOCKPAUS_EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+              <queries>
+                  <intent>
+                      <action android:name="android.intent.action.MAIN" />
+                      <category android:name="android.intent.category.LAUNCHER" />
+                  </intent>
+              </queries>
+
+              <application
+                  android:allowBackup="true"
+                  android:icon="@drawable/ic_launcher"
+                  android:label="Blockpaus"
+                  android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar">
+
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+
+                  <activity
+                      android:name=".PausActivity"
+                      android:exported="false"
+                      android:excludeFromRecents="true"
+                      android:launchMode="singleTask"
+                      android:taskAffinity="se.sommarkatt.blockpaus.paus"
+                      android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen" />
+
+                  <service
+                      android:name=".PausService"
+                      android:exported="true"
+                      android:label="Blockpaus – paus före appar"
+                      android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+                      <intent-filter>
+                          <action android:name="android.accessibilityservice.AccessibilityService" />
+                      </intent-filter>
+                      <meta-data
+                          android:name="android.accessibilityservice"
+                          android:resource="@xml/pausservice" />
+                  </service>
+              </application>
+          </manifest>
+          BLOCKPAUS_EOF
+
+          mkdir -p "$(dirname "app/src/main/java/se/sommarkatt/blockpaus/MainActivity.java")"
+          cat > 'app/src/main/java/se/sommarkatt/blockpaus/MainActivity.java' <<'BLOCKPAUS_EOF'
+          package se.sommarkatt.blockpaus;
+
+          import android.app.Activity;
+          import android.content.Intent;
+          import android.content.pm.PackageManager;
+          import android.content.pm.ResolveInfo;
+          import android.graphics.Color;
+          import android.graphics.Typeface;
+          import android.graphics.drawable.Drawable;
+          import android.graphics.drawable.GradientDrawable;
+          import android.os.Bundle;
+          import android.provider.Settings;
+          import android.text.Editable;
+          import android.text.TextWatcher;
+          import android.view.Gravity;
+          import android.view.View;
+          import android.view.ViewGroup;
+          import android.widget.BaseAdapter;
+          import android.widget.Button;
+          import android.widget.CheckBox;
+          import android.widget.EditText;
+          import android.widget.ImageView;
+          import android.widget.LinearLayout;
+          import android.widget.ListView;
+          import android.widget.TextView;
+
+          import java.text.Collator;
+          import java.util.ArrayList;
+          import java.util.HashSet;
+          import java.util.List;
+          import java.util.Locale;
+          import java.util.Set;
+
+          /** Inställningar: slå på tjänsten, välj appar, pausens längd. */
+          public class MainActivity extends Activity {
+
+              private Prefs prefs;
+              private TextView status;
+              private Button enableButton;
+              private TextView stats;
+              private Button pauseButton;
+              private Button graceButton;
+              private AppAdapter adapter;
+              private TextView loading;
+
+              static class AppItem {
+                  String pkg;
+                  String label;
+                  Drawable icon;
+              }
+
+              private int dp(float v) {
+                  return Math.round(v * getResources().getDisplayMetrics().density);
+              }
+
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  prefs = new Prefs(this);
+
+                  LinearLayout root = new LinearLayout(this);
+                  root.setOrientation(LinearLayout.VERTICAL);
+                  root.setBackgroundColor(Color.parseColor("#F3F8F7"));
+                  root.setPadding(dp(24), dp(24), dp(24), dp(8));
+
+                  TextView title = new TextView(this);
+                  title.setText("Blockpaus");
+                  title.setTextSize(32);
+                  title.setTypeface(Typeface.DEFAULT_BOLD);
+                  title.setTextColor(Color.parseColor("#10262E"));
+                  root.addView(title);
+
+                  TextView sub = new TextView(this);
+                  sub.setText("Blockerar valda appar med en kort paus innan de öppnas.");
+                  sub.setTextSize(17);
+                  sub.setTextColor(Color.parseColor("#3F5F66"));
+                  sub.setPadding(0, 0, 0, dp(16));
+                  root.addView(sub);
+
+                  status = new TextView(this);
+                  status.setTextSize(20);
+                  status.setTypeface(Typeface.DEFAULT_BOLD);
+                  root.addView(status);
+
+                  enableButton = makeButton("Slå på Blockpaus i Tillgänglighet", "#4FB3A9", "#10262E");
+                  enableButton.setOnClickListener(v ->
+                          startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)));
+                  LinearLayout.LayoutParams ep = fullWidth();
+                  ep.topMargin = dp(10);
+                  root.addView(enableButton, ep);
+
+                  stats = new TextView(this);
+                  stats.setTextSize(17);
+                  stats.setTextColor(Color.parseColor("#3F5F66"));
+                  stats.setPadding(0, dp(14), 0, dp(10));
+                  root.addView(stats);
+
+                  LinearLayout row = new LinearLayout(this);
+                  row.setOrientation(LinearLayout.HORIZONTAL);
+                  pauseButton = makeButton("", "#DCEDEA", "#10262E");
+                  pauseButton.setOnClickListener(v -> {
+                      prefs.setPauseSeconds(next(Prefs.PAUSE_CHOICES, prefs.pauseSeconds()));
+                      refreshSettings();
+                  });
+                  graceButton = makeButton("", "#DCEDEA", "#10262E");
+                  graceButton.setOnClickListener(v -> {
+                      prefs.setGraceMinutes(next(Prefs.GRACE_CHOICES, prefs.graceMinutes()));
+                      refreshSettings();
+                  });
+                  LinearLayout.LayoutParams half = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+                  LinearLayout.LayoutParams half2 = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+                  half2.leftMargin = dp(10);
+                  row.addView(pauseButton, half);
+                  row.addView(graceButton, half2);
+                  root.addView(row, fullWidth());
+
+                  TextView hint = new TextView(this);
+                  hint.setText("Tryck på knapparna ovan för att ändra. Bocka i apparna som ska få en paus:");
+                  hint.setTextSize(15);
+                  hint.setTextColor(Color.parseColor("#3F5F66"));
+                  hint.setPadding(0, dp(16), 0, dp(6));
+                  root.addView(hint);
+
+                  EditText search = new EditText(this);
+                  search.setHint("Sök app …");
+                  search.setSingleLine(true);
+                  search.setTextSize(18);
+                  root.addView(search, fullWidth());
+
+                  loading = new TextView(this);
+                  loading.setText("Hämtar dina appar …");
+                  loading.setTextSize(17);
+                  loading.setPadding(0, dp(12), 0, 0);
+                  root.addView(loading);
+
+                  ListView list = new ListView(this);
+                  adapter = new AppAdapter();
+                  list.setAdapter(adapter);
+                  list.setOnItemClickListener((parent, view, position, id) -> {
+                      AppItem it = adapter.getItem(position);
+                      prefs.setWatched(it.pkg, !prefs.isWatched(it.pkg));
+                      adapter.notifyDataSetChanged();
+                  });
+                  root.addView(list, new LinearLayout.LayoutParams(
+                          ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+
+                  search.addTextChangedListener(new TextWatcher() {
+                      @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) { }
+                      @Override public void onTextChanged(CharSequence s, int a, int b, int c) { }
+                      @Override public void afterTextChanged(Editable s) {
+                          adapter.filter(s.toString());
+                      }
+                  });
+
+                  setContentView(root);
+                  loadApps();
+              }
+
+              @Override
+              protected void onResume() {
+                  super.onResume();
+                  refreshStatus();
+                  refreshSettings();
+              }
+
+              private Button makeButton(String text, String bg, String fg) {
+                  Button b = new Button(this);
+                  b.setText(text);
+                  b.setAllCaps(false);
+                  b.setTextSize(17);
+                  b.setTextColor(Color.parseColor(fg));
+                  GradientDrawable d = new GradientDrawable();
+                  d.setColor(Color.parseColor(bg));
+                  d.setCornerRadius(dp(14));
+                  b.setBackground(d);
+                  b.setPadding(dp(16), dp(14), dp(16), dp(14));
+                  return b;
+              }
+
+              private LinearLayout.LayoutParams fullWidth() {
+                  return new LinearLayout.LayoutParams(
+                          ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+              }
+
+              private static int next(int[] choices, int current) {
+                  for (int i = 0; i < choices.length; i++) {
+                      if (choices[i] == current) {
+                          return choices[(i + 1) % choices.length];
+                      }
+                  }
+                  return choices[0];
+              }
+
+              private boolean serviceEnabled() {
+                  String s = Settings.Secure.getString(getContentResolver(),
+                          Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+                  return s != null && s.contains(getPackageName() + "/");
+              }
+
+              private void refreshStatus() {
+                  if (serviceEnabled()) {
+                      status.setText("● Blockpaus är på");
+                      status.setTextColor(Color.parseColor("#1E7F5C"));
+                      enableButton.setText("Tillgänglighetsinställningar");
+                  } else {
+                      status.setText("● Blockpaus är av");
+                      status.setTextColor(Color.parseColor("#B3402F"));
+                      enableButton.setText("Slå på Blockpaus i Tillgänglighet");
+                  }
+                  int a = prefs.attemptsToday();
+                  int d = prefs.declinedToday();
+                  stats.setText("I dag: " + a + (a == 1 ? " paus" : " pauser")
+                          + " · " + d + (d == 1 ? " gång" : " gånger") + " valde du Nej tack");
+              }
+
+              private void refreshSettings() {
+                  pauseButton.setText("Paus: " + prefs.pauseSeconds() + " sekunder");
+                  graceButton.setText("Fritt efter Öppna ändå: " + prefs.graceMinutes() + " min");
+              }
+
+              private void loadApps() {
+                  new Thread(() -> {
+                      PackageManager pm = getPackageManager();
+                      Intent main = new Intent(Intent.ACTION_MAIN);
+                      main.addCategory(Intent.CATEGORY_LAUNCHER);
+                      List<ResolveInfo> ris = pm.queryIntentActivities(main, 0);
+                      Set<String> seen = new HashSet<>();
+                      List<AppItem> items = new ArrayList<>();
+                      for (ResolveInfo ri : ris) {
+                          String p = ri.activityInfo.packageName;
+                          if (p.equals(getPackageName()) || !seen.add(p)) {
+                              continue;
+                          }
+                          AppItem it = new AppItem();
+                          it.pkg = p;
+                          it.label = String.valueOf(ri.loadLabel(pm));
+                          it.icon = ri.loadIcon(pm);
+                          items.add(it);
+                      }
+                      Set<String> watched = prefs.watched();
+                      Collator col = Collator.getInstance(new Locale("sv", "SE"));
+                      items.sort((x, y) -> {
+                          boolean wx = watched.contains(x.pkg);
+                          boolean wy = watched.contains(y.pkg);
+                          if (wx != wy) {
+                              return wx ? -1 : 1;
+                          }
+                          return col.compare(x.label, y.label);
+                      });
+                      runOnUiThread(() -> {
+                          loading.setVisibility(View.GONE);
+                          adapter.setAll(items);
+                      });
+                  }).start();
+              }
+
+              class AppAdapter extends BaseAdapter {
+                  private List<AppItem> all = new ArrayList<>();
+                  private List<AppItem> shown = new ArrayList<>();
+                  private String query = "";
+
+                  void setAll(List<AppItem> items) {
+                      all = items;
+                      filter(query);
+                  }
+
+                  void filter(String q) {
+                      query = q == null ? "" : q.trim().toLowerCase(Locale.ROOT);
+                      shown = new ArrayList<>();
+                      for (AppItem it : all) {
+                          if (query.isEmpty() || it.label.toLowerCase(Locale.ROOT).contains(query)) {
+                              shown.add(it);
+                          }
+                      }
+                      notifyDataSetChanged();
+                  }
+
+                  @Override public int getCount() { return shown.size(); }
+                  @Override public AppItem getItem(int position) { return shown.get(position); }
+                  @Override public long getItemId(int position) { return position; }
+
+                  @Override
+                  public View getView(int position, View convertView, ViewGroup parent) {
+                      LinearLayout row;
+                      ImageView icon;
+                      TextView label;
+                      CheckBox box;
+                      if (convertView == null) {
+                          row = new LinearLayout(MainActivity.this);
+                          row.setOrientation(LinearLayout.HORIZONTAL);
+                          row.setGravity(Gravity.CENTER_VERTICAL);
+                          row.setPadding(dp(4), dp(10), dp(4), dp(10));
+                          icon = new ImageView(MainActivity.this);
+                          row.addView(icon, new LinearLayout.LayoutParams(dp(44), dp(44)));
+                          label = new TextView(MainActivity.this);
+                          label.setTextSize(19);
+                          label.setTextColor(Color.parseColor("#10262E"));
+                          label.setPadding(dp(16), 0, dp(8), 0);
+                          row.addView(label, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+                          box = new CheckBox(MainActivity.this);
+                          box.setClickable(false);
+                          box.setFocusable(false);
+                          row.addView(box);
+                          row.setTag(new View[]{icon, label, box});
+                      } else {
+                          row = (LinearLayout) convertView;
+                          View[] v = (View[]) row.getTag();
+                          icon = (ImageView) v[0];
+                          label = (TextView) v[1];
+                          box = (CheckBox) v[2];
+                      }
+                      AppItem it = shown.get(position);
+                      icon.setImageDrawable(it.icon);
+                      label.setText(it.label);
+                      box.setChecked(prefs.isWatched(it.pkg));
+                      return row;
+                  }
+              }
+          }
+          BLOCKPAUS_EOF
+
+          mkdir -p "$(dirname "app/src/main/java/se/sommarkatt/blockpaus/PausActivity.java")"
+          cat > 'app/src/main/java/se/sommarkatt/blockpaus/PausActivity.java' <<'BLOCKPAUS_EOF'
+          package se.sommarkatt.blockpaus;
+
+          import android.animation.Animator;
+          import android.animation.AnimatorListenerAdapter;
+          import android.animation.ValueAnimator;
+          import android.app.Activity;
+          import android.content.Intent;
+          import android.content.pm.ApplicationInfo;
+          import android.content.pm.PackageManager;
+          import android.graphics.Color;
+          import android.graphics.Typeface;
+          import android.graphics.drawable.GradientDrawable;
+          import android.os.Bundle;
+          import android.os.Handler;
+         
