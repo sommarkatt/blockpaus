@@ -1,5 +1,4 @@
 # Blockpaus – bygger appen och lägger ut en färdig apk under Releases.
-# Allt i appen finns i den här filen. Ändra inget, spara bara.
 name: Bygg Blockpaus
 
 on:
@@ -25,441 +24,184 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Skapa appens filer
+      - name: Packa upp appens filer
         run: |
-          mkdir -p "$(dirname "app/build.gradle")"
-          cat > 'app/build.gradle' <<'BLOCKPAUS_EOF'
-          plugins {
-              id 'com.android.application'
-          }
+          base64 -d > app.tar.xz <<'SLUT'
+          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
+          SLUT
+          echo "23913b78c1375edba96ed3552f111b54a0c4149ecfa4720e2789d683a5e83851  app.tar.xz" | sha256sum -c - || { echo "FILEN BLEV INTE HEL – klistra in igen"; exit 1; }
+          tar -xJf app.tar.xz
+          rm app.tar.xz
 
-          android {
-              namespace 'se.sommarkatt.blockpaus'
-              compileSdk 34
+      - name: Skapa signeringsnyckel första gången
+        run: |
+          if [ ! -f keystore/blockpaus.jks ]; then
+            mkdir -p keystore
+            keytool -genkeypair -keystore keystore/blockpaus.jks -alias blockpaus \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass blockpaus123 -keypass blockpaus123 -dname "CN=Blockpaus"
+            git config user.name "github-actions"
+            git config user.email "github-actions@users.noreply.github.com"
+            git add keystore/blockpaus.jks
+            git commit -m "Signeringsnyckel för Blockpaus"
+            git push
+          fi
 
-              defaultConfig {
-                  applicationId 'se.sommarkatt.blockpaus'
-                  minSdk 26
-                  targetSdk 34
-                  versionCode 1
-                  versionName '1.0'
-              }
+      - name: Bygg apk
+        run: |
+          gradle :app:assembleRelease --no-daemon
+          cp app/build/outputs/apk/release/app-release.apk Blockpaus.apk
 
-              signingConfigs {
-                  release {
-                      storeFile file('../keystore/blockpaus.jks')
-                      storePassword 'blockpaus123'
-                      keyAlias 'blockpaus'
-                      keyPassword 'blockpaus123'
-                  }
-              }
-
-              buildTypes {
-                  release {
-                      minifyEnabled false
-                      signingConfig signingConfigs.release
-                  }
-              }
-
-              compileOptions {
-                  sourceCompatibility JavaVersion.VERSION_17
-                  targetCompatibility JavaVersion.VERSION_17
-              }
-          }
-
-          tasks.withType(JavaCompile).configureEach {
-              options.encoding = 'UTF-8'
-          }
-          BLOCKPAUS_EOF
-
-          mkdir -p "$(dirname "app/src/main/AndroidManifest.xml")"
-          cat > 'app/src/main/AndroidManifest.xml' <<'BLOCKPAUS_EOF'
-          <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
-              <queries>
-                  <intent>
-                      <action android:name="android.intent.action.MAIN" />
-                      <category android:name="android.intent.category.LAUNCHER" />
-                  </intent>
-              </queries>
-
-              <application
-                  android:allowBackup="true"
-                  android:icon="@drawable/ic_launcher"
-                  android:label="Blockpaus"
-                  android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar">
-
-                  <activity
-                      android:name=".MainActivity"
-                      android:exported="true">
-                      <intent-filter>
-                          <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHER" />
-                      </intent-filter>
-                  </activity>
-
-                  <activity
-                      android:name=".PausActivity"
-                      android:exported="false"
-                      android:excludeFromRecents="true"
-                      android:launchMode="singleTask"
-                      android:taskAffinity="se.sommarkatt.blockpaus.paus"
-                      android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen" />
-
-                  <service
-                      android:name=".PausService"
-                      android:exported="true"
-                      android:label="Blockpaus – paus före appar"
-                      android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
-                      <intent-filter>
-                          <action android:name="android.accessibilityservice.AccessibilityService" />
-                      </intent-filter>
-                      <meta-data
-                          android:name="android.accessibilityservice"
-                          android:resource="@xml/pausservice" />
-                  </service>
-              </application>
-          </manifest>
-          BLOCKPAUS_EOF
-
-          mkdir -p "$(dirname "app/src/main/java/se/sommarkatt/blockpaus/MainActivity.java")"
-          cat > 'app/src/main/java/se/sommarkatt/blockpaus/MainActivity.java' <<'BLOCKPAUS_EOF'
-          package se.sommarkatt.blockpaus;
-
-          import android.app.Activity;
-          import android.content.Intent;
-          import android.content.pm.PackageManager;
-          import android.content.pm.ResolveInfo;
-          import android.graphics.Color;
-          import android.graphics.Typeface;
-          import android.graphics.drawable.Drawable;
-          import android.graphics.drawable.GradientDrawable;
-          import android.os.Bundle;
-          import android.provider.Settings;
-          import android.text.Editable;
-          import android.text.TextWatcher;
-          import android.view.Gravity;
-          import android.view.View;
-          import android.view.ViewGroup;
-          import android.widget.BaseAdapter;
-          import android.widget.Button;
-          import android.widget.CheckBox;
-          import android.widget.EditText;
-          import android.widget.ImageView;
-          import android.widget.LinearLayout;
-          import android.widget.ListView;
-          import android.widget.TextView;
-
-          import java.text.Collator;
-          import java.util.ArrayList;
-          import java.util.HashSet;
-          import java.util.List;
-          import java.util.Locale;
-          import java.util.Set;
-
-          /** Inställningar: slå på tjänsten, välj appar, pausens längd. */
-          public class MainActivity extends Activity {
-
-              private Prefs prefs;
-              private TextView status;
-              private Button enableButton;
-              private TextView stats;
-              private Button pauseButton;
-              private Button graceButton;
-              private AppAdapter adapter;
-              private TextView loading;
-
-              static class AppItem {
-                  String pkg;
-                  String label;
-                  Drawable icon;
-              }
-
-              private int dp(float v) {
-                  return Math.round(v * getResources().getDisplayMetrics().density);
-              }
-
-              @Override
-              protected void onCreate(Bundle savedInstanceState) {
-                  super.onCreate(savedInstanceState);
-                  prefs = new Prefs(this);
-
-                  LinearLayout root = new LinearLayout(this);
-                  root.setOrientation(LinearLayout.VERTICAL);
-                  root.setBackgroundColor(Color.parseColor("#F3F8F7"));
-                  root.setPadding(dp(24), dp(24), dp(24), dp(8));
-
-                  TextView title = new TextView(this);
-                  title.setText("Blockpaus");
-                  title.setTextSize(32);
-                  title.setTypeface(Typeface.DEFAULT_BOLD);
-                  title.setTextColor(Color.parseColor("#10262E"));
-                  root.addView(title);
-
-                  TextView sub = new TextView(this);
-                  sub.setText("Blockerar valda appar med en kort paus innan de öppnas.");
-                  sub.setTextSize(17);
-                  sub.setTextColor(Color.parseColor("#3F5F66"));
-                  sub.setPadding(0, 0, 0, dp(16));
-                  root.addView(sub);
-
-                  status = new TextView(this);
-                  status.setTextSize(20);
-                  status.setTypeface(Typeface.DEFAULT_BOLD);
-                  root.addView(status);
-
-                  enableButton = makeButton("Slå på Blockpaus i Tillgänglighet", "#4FB3A9", "#10262E");
-                  enableButton.setOnClickListener(v ->
-                          startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)));
-                  LinearLayout.LayoutParams ep = fullWidth();
-                  ep.topMargin = dp(10);
-                  root.addView(enableButton, ep);
-
-                  stats = new TextView(this);
-                  stats.setTextSize(17);
-                  stats.setTextColor(Color.parseColor("#3F5F66"));
-                  stats.setPadding(0, dp(14), 0, dp(10));
-                  root.addView(stats);
-
-                  LinearLayout row = new LinearLayout(this);
-                  row.setOrientation(LinearLayout.HORIZONTAL);
-                  pauseButton = makeButton("", "#DCEDEA", "#10262E");
-                  pauseButton.setOnClickListener(v -> {
-                      prefs.setPauseSeconds(next(Prefs.PAUSE_CHOICES, prefs.pauseSeconds()));
-                      refreshSettings();
-                  });
-                  graceButton = makeButton("", "#DCEDEA", "#10262E");
-                  graceButton.setOnClickListener(v -> {
-                      prefs.setGraceMinutes(next(Prefs.GRACE_CHOICES, prefs.graceMinutes()));
-                      refreshSettings();
-                  });
-                  LinearLayout.LayoutParams half = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-                  LinearLayout.LayoutParams half2 = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-                  half2.leftMargin = dp(10);
-                  row.addView(pauseButton, half);
-                  row.addView(graceButton, half2);
-                  root.addView(row, fullWidth());
-
-                  TextView hint = new TextView(this);
-                  hint.setText("Tryck på knapparna ovan för att ändra. Bocka i apparna som ska få en paus:");
-                  hint.setTextSize(15);
-                  hint.setTextColor(Color.parseColor("#3F5F66"));
-                  hint.setPadding(0, dp(16), 0, dp(6));
-                  root.addView(hint);
-
-                  EditText search = new EditText(this);
-                  search.setHint("Sök app …");
-                  search.setSingleLine(true);
-                  search.setTextSize(18);
-                  root.addView(search, fullWidth());
-
-                  loading = new TextView(this);
-                  loading.setText("Hämtar dina appar …");
-                  loading.setTextSize(17);
-                  loading.setPadding(0, dp(12), 0, 0);
-                  root.addView(loading);
-
-                  ListView list = new ListView(this);
-                  adapter = new AppAdapter();
-                  list.setAdapter(adapter);
-                  list.setOnItemClickListener((parent, view, position, id) -> {
-                      AppItem it = adapter.getItem(position);
-                      prefs.setWatched(it.pkg, !prefs.isWatched(it.pkg));
-                      adapter.notifyDataSetChanged();
-                  });
-                  root.addView(list, new LinearLayout.LayoutParams(
-                          ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
-
-                  search.addTextChangedListener(new TextWatcher() {
-                      @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) { }
-                      @Override public void onTextChanged(CharSequence s, int a, int b, int c) { }
-                      @Override public void afterTextChanged(Editable s) {
-                          adapter.filter(s.toString());
-                      }
-                  });
-
-                  setContentView(root);
-                  loadApps();
-              }
-
-              @Override
-              protected void onResume() {
-                  super.onResume();
-                  refreshStatus();
-                  refreshSettings();
-              }
-
-              private Button makeButton(String text, String bg, String fg) {
-                  Button b = new Button(this);
-                  b.setText(text);
-                  b.setAllCaps(false);
-                  b.setTextSize(17);
-                  b.setTextColor(Color.parseColor(fg));
-                  GradientDrawable d = new GradientDrawable();
-                  d.setColor(Color.parseColor(bg));
-                  d.setCornerRadius(dp(14));
-                  b.setBackground(d);
-                  b.setPadding(dp(16), dp(14), dp(16), dp(14));
-                  return b;
-              }
-
-              private LinearLayout.LayoutParams fullWidth() {
-                  return new LinearLayout.LayoutParams(
-                          ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-              }
-
-              private static int next(int[] choices, int current) {
-                  for (int i = 0; i < choices.length; i++) {
-                      if (choices[i] == current) {
-                          return choices[(i + 1) % choices.length];
-                      }
-                  }
-                  return choices[0];
-              }
-
-              private boolean serviceEnabled() {
-                  String s = Settings.Secure.getString(getContentResolver(),
-                          Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
-                  return s != null && s.contains(getPackageName() + "/");
-              }
-
-              private void refreshStatus() {
-                  if (serviceEnabled()) {
-                      status.setText("● Blockpaus är på");
-                      status.setTextColor(Color.parseColor("#1E7F5C"));
-                      enableButton.setText("Tillgänglighetsinställningar");
-                  } else {
-                      status.setText("● Blockpaus är av");
-                      status.setTextColor(Color.parseColor("#B3402F"));
-                      enableButton.setText("Slå på Blockpaus i Tillgänglighet");
-                  }
-                  int a = prefs.attemptsToday();
-                  int d = prefs.declinedToday();
-                  stats.setText("I dag: " + a + (a == 1 ? " paus" : " pauser")
-                          + " · " + d + (d == 1 ? " gång" : " gånger") + " valde du Nej tack");
-              }
-
-              private void refreshSettings() {
-                  pauseButton.setText("Paus: " + prefs.pauseSeconds() + " sekunder");
-                  graceButton.setText("Fritt efter Öppna ändå: " + prefs.graceMinutes() + " min");
-              }
-
-              private void loadApps() {
-                  new Thread(() -> {
-                      PackageManager pm = getPackageManager();
-                      Intent main = new Intent(Intent.ACTION_MAIN);
-                      main.addCategory(Intent.CATEGORY_LAUNCHER);
-                      List<ResolveInfo> ris = pm.queryIntentActivities(main, 0);
-                      Set<String> seen = new HashSet<>();
-                      List<AppItem> items = new ArrayList<>();
-                      for (ResolveInfo ri : ris) {
-                          String p = ri.activityInfo.packageName;
-                          if (p.equals(getPackageName()) || !seen.add(p)) {
-                              continue;
-                          }
-                          AppItem it = new AppItem();
-                          it.pkg = p;
-                          it.label = String.valueOf(ri.loadLabel(pm));
-                          it.icon = ri.loadIcon(pm);
-                          items.add(it);
-                      }
-                      Set<String> watched = prefs.watched();
-                      Collator col = Collator.getInstance(new Locale("sv", "SE"));
-                      items.sort((x, y) -> {
-                          boolean wx = watched.contains(x.pkg);
-                          boolean wy = watched.contains(y.pkg);
-                          if (wx != wy) {
-                              return wx ? -1 : 1;
-                          }
-                          return col.compare(x.label, y.label);
-                      });
-                      runOnUiThread(() -> {
-                          loading.setVisibility(View.GONE);
-                          adapter.setAll(items);
-                      });
-                  }).start();
-              }
-
-              class AppAdapter extends BaseAdapter {
-                  private List<AppItem> all = new ArrayList<>();
-                  private List<AppItem> shown = new ArrayList<>();
-                  private String query = "";
-
-                  void setAll(List<AppItem> items) {
-                      all = items;
-                      filter(query);
-                  }
-
-                  void filter(String q) {
-                      query = q == null ? "" : q.trim().toLowerCase(Locale.ROOT);
-                      shown = new ArrayList<>();
-                      for (AppItem it : all) {
-                          if (query.isEmpty() || it.label.toLowerCase(Locale.ROOT).contains(query)) {
-                              shown.add(it);
-                          }
-                      }
-                      notifyDataSetChanged();
-                  }
-
-                  @Override public int getCount() { return shown.size(); }
-                  @Override public AppItem getItem(int position) { return shown.get(position); }
-                  @Override public long getItemId(int position) { return position; }
-
-                  @Override
-                  public View getView(int position, View convertView, ViewGroup parent) {
-                      LinearLayout row;
-                      ImageView icon;
-                      TextView label;
-                      CheckBox box;
-                      if (convertView == null) {
-                          row = new LinearLayout(MainActivity.this);
-                          row.setOrientation(LinearLayout.HORIZONTAL);
-                          row.setGravity(Gravity.CENTER_VERTICAL);
-                          row.setPadding(dp(4), dp(10), dp(4), dp(10));
-                          icon = new ImageView(MainActivity.this);
-                          row.addView(icon, new LinearLayout.LayoutParams(dp(44), dp(44)));
-                          label = new TextView(MainActivity.this);
-                          label.setTextSize(19);
-                          label.setTextColor(Color.parseColor("#10262E"));
-                          label.setPadding(dp(16), 0, dp(8), 0);
-                          row.addView(label, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-                          box = new CheckBox(MainActivity.this);
-                          box.setClickable(false);
-                          box.setFocusable(false);
-                          row.addView(box);
-                          row.setTag(new View[]{icon, label, box});
-                      } else {
-                          row = (LinearLayout) convertView;
-                          View[] v = (View[]) row.getTag();
-                          icon = (ImageView) v[0];
-                          label = (TextView) v[1];
-                          box = (CheckBox) v[2];
-                      }
-                      AppItem it = shown.get(position);
-                      icon.setImageDrawable(it.icon);
-                      label.setText(it.label);
-                      box.setChecked(prefs.isWatched(it.pkg));
-                      return row;
-                  }
-              }
-          }
-          BLOCKPAUS_EOF
-
-          mkdir -p "$(dirname "app/src/main/java/se/sommarkatt/blockpaus/PausActivity.java")"
-          cat > 'app/src/main/java/se/sommarkatt/blockpaus/PausActivity.java' <<'BLOCKPAUS_EOF'
-          package se.sommarkatt.blockpaus;
-
-          import android.animation.Animator;
-          import android.animation.AnimatorListenerAdapter;
-          import android.animation.ValueAnimator;
-          import android.app.Activity;
-          import android.content.Intent;
-          import android.content.pm.ApplicationInfo;
-          import android.content.pm.PackageManager;
-          import android.graphics.Color;
-          import android.graphics.Typeface;
-          import android.graphics.drawable.GradientDrawable;
-          import android.os.Bundle;
-          import android.os.Handler;
-         
+      - name: Lägg ut under Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: Blockpaus version ${{ github.run_number }}
+          body: Tryck på Blockpaus.apk nedan för att ladda ner.
+          files: Blockpaus.apk
+          make_latest: true
+# SLUT PÅ FILEN – syns den här raden på GitHub är allt med.
